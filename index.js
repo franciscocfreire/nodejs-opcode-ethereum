@@ -6,6 +6,7 @@ const SUB = 'SUB';
 const DIV = 'DIV';
 const JUMP = 'JUMP';
 const JUMPI = 'JUMPI';
+const EXECUTION_COMPLETE = 'Execution complete';
 
 class Interpreter {
     constructor() {
@@ -21,45 +22,56 @@ class Interpreter {
         while (this.state.programCounter < this.state.code.length) {
             const opcode = this.state.code[this.state.programCounter]
 
-            switch (opcode) {
-                case STOP:
-                    return this.state.stack[this.state.stack.length - 1];
-                case PUSH:
-                    this.state.programCounter++;
-                    const value = this.state.code[this.state.programCounter];
-                    this.state.stack.push(value);
-                    break;
+            try {
 
-                case ADD:
-                case SUB:
-                case MUL:
-                case DIV:
+                switch (opcode) {
+                    case STOP:
+                        throw new Error(EXECUTION_COMPLETE);
+                    case PUSH:
+                        this.state.programCounter++;
+                        const value = this.state.code[this.state.programCounter];
+                        this.state.stack.push(value);
+                        break;
 
-                    const a = this.state.stack.pop();
-                    const b = this.state.stack.pop();
+                    case ADD:
+                    case SUB:
+                    case MUL:
+                    case DIV:
 
-                    let result;
+                        const a = this.state.stack.pop();
+                        const b = this.state.stack.pop();
 
-                    if (opcode === ADD) result = a + b;
-                    if (opcode === SUB) result = a - b;
-                    if (opcode === MUL) result = a * b;
-                    if (opcode === DIV) result = a / b;
+                        let result;
 
-                    this.state.stack.push(result);
+                        if (opcode === ADD) result = a + b;
+                        if (opcode === SUB) result = a - b;
+                        if (opcode === MUL) result = a * b;
+                        if (opcode === DIV) result = a / b;
 
-                    break;
+                        this.state.stack.push(result);
 
-                case JUMP:
-                    this.jump();
-                    break;
-                case JUMPI:
-                    const condition = this.state.stack.pop();
-                    if (condition === 1) {
+                        break;
+
+                    case JUMP:
                         this.jump();
+                        break;
+                    case JUMPI:
+                        const condition = this.state.stack.pop();
+                        if (condition === 1) {
+                            this.jump();
+                        }
+                        break;
+
+
+                }
+            } catch (error) {
+                if (error.message === EXECUTION_COMPLETE) {
+                    return {
+                        return: this.state.stack[this.state.stack.length - 1]
                     }
-                    break;
+                }
 
-
+                throw error;
             }
 
             this.state.programCounter++;
@@ -68,6 +80,11 @@ class Interpreter {
 
     jump() {
         const destination = this.state.stack.pop();
+
+        if (destination < 0 || destination > this.state.code.length) {
+            throw new Error(`Invalid destination: ${destination}`)
+        }
+
         this.state.programCounter = destination;
         this.state.programCounter--;
     }
@@ -108,8 +125,15 @@ console.log('Result of JUMP = ', result);
 
 //JUMP
 
-code = [PUSH, 8, PUSH, 1,  JUMPI, PUSH, 0, JUMP, PUSH, 'jump successful', STOP];
+code = [PUSH, 8, PUSH, 1, JUMPI, PUSH, 0, JUMP, PUSH, 'jump successful', STOP];
 result = new Interpreter().runCode(code);
 
 console.log('Result of JUMPI = ', result);
 
+//ERROR 
+code = [PUSH, 99, JUMP, PUSH, 0, JUMP, PUSH, 'jump successful', STOP];
+try {
+    new Interpreter().runCode(code);
+} catch (error) {
+    console.log('Invalid destination error:', error.message);
+}
