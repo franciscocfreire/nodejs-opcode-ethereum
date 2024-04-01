@@ -19,7 +19,7 @@ class Interpreter {
 
         }
     }
-
+    
     runCode(code) {
         this.state.code = code;
         while (this.state.programCounter < this.state.code.length) {
