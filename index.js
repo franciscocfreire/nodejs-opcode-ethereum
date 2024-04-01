@@ -7,13 +7,16 @@ const DIV = 'DIV';
 const JUMP = 'JUMP';
 const JUMPI = 'JUMPI';
 const EXECUTION_COMPLETE = 'Execution complete';
+const EXECUTION_LIMIT = 10000;
 
 class Interpreter {
     constructor() {
         this.state = {
             programCounter: 0,
             stack: [],
-            code: []
+            code: [],
+            executionCount: 0,
+
         }
     }
 
@@ -21,6 +24,12 @@ class Interpreter {
         this.state.code = code;
         while (this.state.programCounter < this.state.code.length) {
             const opcode = this.state.code[this.state.programCounter]
+
+            this.state.executionCount++;
+
+            if (this.state.executionCount > EXECUTION_LIMIT) {
+                throw new Error(`Check for an infinite loop. Execution limit of ${EXECUTION_LIMIT} exceeded`);
+            }
 
             try {
 
@@ -141,10 +150,19 @@ try {
     console.log('Invalid destination error:', error.message);
 }
 
-
+// INVALID PUSH
 code = [PUSH, 0, PUSH];
 try {
     new Interpreter().runCode(code)
 } catch (error) {
     console.log('Expected invalid PUSH error: ', error.message);
 }
+
+// CHECK EXECTUION LIMIT
+code = [PUSH, 0, JUMP, STOP];
+try {
+    new Interpreter().runCode(code);
+} catch (error) {
+    console.log('Expected invalid execution error:', error.message);
+}
+
