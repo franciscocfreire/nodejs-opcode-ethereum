@@ -5,6 +5,7 @@ const MUL = 'MUL';
 const SUB = 'SUB';
 const DIV = 'DIV';
 const JUMP = 'JUMP';
+const JUMPI = 'JUMPI';
 
 class Interpreter {
     constructor() {
@@ -49,16 +50,26 @@ class Interpreter {
                     break;
 
                 case JUMP:
-                    const destination = this.state.stack.pop();
-                    this.state.programCounter = destination;
-                    this.state.programCounter--;
-
+                    this.jump();
                     break;
+                case JUMPI:
+                    const condition = this.state.stack.pop();
+                    if (condition === 1) {
+                        this.jump();
+                    }
+                    break;
+
 
             }
 
             this.state.programCounter++;
         }
+    }
+
+    jump() {
+        const destination = this.state.stack.pop();
+        this.state.programCounter = destination;
+        this.state.programCounter--;
     }
 };
 
@@ -90,7 +101,15 @@ console.log('Result of x / y = ', result);
 
 //JUMP
 
-code = [PUSH, 6 , JUMP, PUSH, 0, JUMP, PUSH, 'jump successful', STOP];
+code = [PUSH, 6, JUMP, PUSH, 0, JUMP, PUSH, 'jump successful', STOP];
 result = new Interpreter().runCode(code);
 
 console.log('Result of JUMP = ', result);
+
+//JUMP
+
+code = [PUSH, 8, PUSH, 1,  JUMPI, PUSH, 0, JUMP, PUSH, 'jump successful', STOP];
+result = new Interpreter().runCode(code);
+
+console.log('Result of JUMPI = ', result);
+
