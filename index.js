@@ -29,6 +29,9 @@ class Interpreter {
                         throw new Error(EXECUTION_COMPLETE);
                     case PUSH:
                         this.state.programCounter++;
+                        if (this.state.programCounter === this.state.code.length) {
+                            throw new Error('The PUSH instruction cannot be last');
+                        }
                         const value = this.state.code[this.state.programCounter];
                         this.state.stack.push(value);
                         break;
@@ -136,4 +139,12 @@ try {
     new Interpreter().runCode(code);
 } catch (error) {
     console.log('Invalid destination error:', error.message);
+}
+
+
+code = [PUSH, 0, PUSH];
+try {
+    new Interpreter().runCode(code)
+} catch (error) {
+    console.log('Expected invalid PUSH error: ', error.message);
 }
